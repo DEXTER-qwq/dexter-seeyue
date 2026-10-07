@@ -1,3 +1,5 @@
+<div align="center">
+
 # dexter-seeyue
 
 **给长文写作的一套排版秩序**
@@ -6,6 +8,7 @@
 
 ![dexter-seeyue 暗色](./assets/image-20261007141901046.png)
 
+</div>
 
 ## 改了什么
 
