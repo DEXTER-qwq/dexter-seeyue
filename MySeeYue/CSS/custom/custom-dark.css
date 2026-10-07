@@ -174,13 +174,17 @@
 /* 4.2.1 关掉「光标所在单元格」的绿条 —— 表格里一切错位的真正根源。
    这是主题自带的功能，实现在 table/table.css：
      table tr :is(th,td)               { overflow: hidden }
+     table tr :is(th,td) .td-span      { min-height: 17.105px }
      table tr :is(th,td) .md-focus     { display: inline-block !important; position: relative; transition: all .5s ease }
      .md-table-fig ... .md-focus::after{ content:" "; position:absolute; left:-12px; width:1000px; height:3px; background:#a3be8c; margin:-6px 0 }
    其中 `.md-focus` 就是单元格里那层 `<span class="td-span" cid=...>`（Typora 把 .md-focus 加在最近的 [cid] 上）。
-   问题是：光标一进单元格，这个 span 就被强制成 inline-block，还挂了 `transition: all .5s ease`；
-   鼠标在单元格里拖选文字时 Typora 会不停重排这个 span，于是它的盒子一会儿大一会儿小、
-   再被 0.5s 过渡拖一下 —— 表现出来就是单元格内容上下错位、文字被切掉一半，松手又慢慢弹回去。
-   绿条本身只是个装饰，去掉它、并把被它牵连的三处还原，表格就彻底老实了。 */
+   问题是：光标一进单元格，这个 span 就多出 position/transition，鼠标在单元格里拖选文字时
+   Typora 会不停重排它，盒子尺寸一变就被 0.5s 过渡拖着动画走 —— 表现出来就是单元格内容
+   上下错位、文字被切掉一半，松手又慢慢弹回去。
+   绿条本身只是个装饰，去掉它、并把被它牵连的几处还原成 Typora 的默认值，表格就老实了。
+   注意：`.td-span` 的 `display: inline-block` 是 Typora 核心 base-control.css 给的
+   （`min-width:1ch; width:100%; min-height:10px`），千万别动 display ——
+   只把主题额外塞进去的东西去掉，聚焦/失焦两种状态的排版才会一致。 */
 :root {
   /* 绿条本体：inline-block —— 开启，none —— 关闭 */
   --focus-table-td-bottom-line-state: none;
@@ -191,9 +195,18 @@
   overflow: visible;
 }
 
-/* span.td-span 本来就是行内元素，恢复行内；顺手摘掉 0.5s 过渡，避免「慢慢弹回」 */
+/* 4.2.2 光标停在单元格开头 / 结尾时，单元格上方会冒出一条白色竖线。
+   那是 WebKit 给 .td-span 这个 inline-block 的边界画的光标，而主题
+   把 Typora 原本的 `min-height: 10px` 抬到了 17.105px：盒子比文字行还高，
+   光标就按盒子的高度画，一头顶进了单元格上方的留白里。
+   min-height 还原成 Typora 的默认值，position 也交还给核心。 */
+#write table tr :is(th, td) .td-span {
+  min-height: 10px !important;
+  position  : static !important;
+}
+
+/* 聚焦状态不再挂 0.5s 过渡，避免「慢慢弹回」 */
 #write table tr :is(th, td) .md-focus {
-  display   : inline !important;
   transition: none !important;
 }
 
