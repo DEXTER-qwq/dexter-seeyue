@@ -131,24 +131,85 @@
    「单行横向滚动」规则（code-block.css 内）会失效，这是该功能的正常取舍。 */
 
 /* 4.1 表格的横向滚动条也去掉（上面两个变量只管纵向）。
-   auto-scroll.css 给 figure 设了 `overflow: overlay`，只要表格比正文列宽就出横向滚动条：
+   auto-scroll.css 给 figure 设了 `overflow: overlay`，Typora 核心 base.css 也给
+   `figure { overflow-x: auto }`，两层加起来，只要表格比正文列宽就是一个可滚动容器：
      · 列多 —— 每列还有 `--table-cell-min-width: 120px` 的硬下限，列数 × 120px 很容易超宽；
      · 单元格里有长串 —— 像 `--side-bar-bg-color` 这种不换行的 token 会顶开列宽。
-   两条一起松开，表格就会自己缩进正文列宽以内，而不是滚起来。 */
-#write figure.md-table-fig,
-#write figure:has(> table) {
+   容器一能滚，在表格里按住鼠标拖动就会把表格当画布平移（上下左右都能推）。
+   所以这里把「能不能滚」直接掐掉：两个轴都不滚，宽度不够就自己缩。 */
+#write :is(figure.md-table-fig, figure.table-figure, .md-table-fig, figure:has(> table)),
+/* 导出 HTML / PDF 时表格包在 figure.table-figure 里，一并处理 */
+.typora-export :is(figure.md-table-fig, figure.table-figure, figure:has(> table)) {
   /* 纵向已经由 --table-max-height: initial 关掉，这里一并写明，防止上游改动回退 */
   max-height: none !important;
-  /* 关掉滚动容器：表格装不下时直接缩，不再出滚动条 */
+  /* 关掉滚动容器：表格装不下时直接缩，不再出滚动条，也没有可平移的余地 */
   overflow  : visible !important;
 }
 
-#write figure.md-table-fig > table tr :is(th, td),
-#write figure:has(> table) > table tr :is(th, td) {
+#write :is(figure.md-table-fig, figure.table-figure, .md-table-fig, figure:has(> table)) > table tr :is(th, td),
+.typora-export :is(figure.md-table-fig, figure.table-figure, figure:has(> table)) > table tr :is(th, td) {
   /* 去掉 auto-scroll.css 的 min-width: var(--table-cell-min-width) 硬下限 */
   min-width    : 0 !important;
   /* 长串允许在任意位置断开，否则列压不窄 */
   overflow-wrap: anywhere;
+}
+
+/* 4.2 表格固定不动：关掉 Typora 的「拖动行 / 列」把手。
+   现象：鼠标在表格里按住一拖，整行（或整列）跟着鼠标上下左右跑，旁边出现一条
+   绿色插入线，松手又落回原处；拖动时那半透明的行块还会盖住相邻行。看着像「表格
+   在滚动」，其实和滚动无关 —— 那是 Typora 内置的「拖动调整行 / 列顺序」。
+   实现（Typora 的 main.js）：鼠标进到 th/td 时，Typora 把两个透明层贴到行和列上 ——
+     #typora-table-row-tracker  行把手，里面 .typora-table-drag-area 被撑成「12px 宽 × 整行高」
+     #typora-table-col-tracker  列把手，里面 .typora-table-drag-area 被撑成「整列宽 × 8px 高」
+   两个把手本身 opacity:0，看不见，但就压在单元格左边缘 / 上边缘上，mousedown 即
+   `moveTableRow` / `moveTableCol`。这两个层只在拖行拖列时有用，这里直接不显示，
+   表格就彻底静止；顺带的好处是表格里可以正常拖选文字。
+   注：它们是被 jQuery 的 .show() 打开的，会写 inline 的 display，但 inline 样式
+   压不过 !important。想恢复拖行/拖列，注释掉这一段即可。 */
+#typora-table-row-tracker,
+#typora-table-col-tracker {
+  display: none !important;
+}
+
+/* 4.2.1 关掉「光标所在单元格」的绿条 —— 表格里一切错位的真正根源。
+   这是主题自带的功能，实现在 table/table.css：
+     table tr :is(th,td)               { overflow: hidden }
+     table tr :is(th,td) .md-focus     { display: inline-block !important; position: relative; transition: all .5s ease }
+     .md-table-fig ... .md-focus::after{ content:" "; position:absolute; left:-12px; width:1000px; height:3px; background:#a3be8c; margin:-6px 0 }
+   其中 `.md-focus` 就是单元格里那层 `<span class="td-span" cid=...>`（Typora 把 .md-focus 加在最近的 [cid] 上）。
+   问题是：光标一进单元格，这个 span 就被强制成 inline-block，还挂了 `transition: all .5s ease`；
+   鼠标在单元格里拖选文字时 Typora 会不停重排这个 span，于是它的盒子一会儿大一会儿小、
+   再被 0.5s 过渡拖一下 —— 表现出来就是单元格内容上下错位、文字被切掉一半，松手又慢慢弹回去。
+   绿条本身只是个装饰，去掉它、并把被它牵连的三处还原，表格就彻底老实了。 */
+:root {
+  /* 绿条本体：inline-block —— 开启，none —— 关闭 */
+  --focus-table-td-bottom-line-state: none;
+}
+
+/* 单元格恢复默认裁剪行为（overflow: hidden 只是为了裁那条 1000px 宽的绿线） */
+#write table tr :is(th, td) {
+  overflow: visible;
+}
+
+/* span.td-span 本来就是行内元素，恢复行内；顺手摘掉 0.5s 过渡，避免「慢慢弹回」 */
+#write table tr :is(th, td) .md-focus {
+  display   : inline !important;
+  transition: none !important;
+}
+
+/* 绿线不再绘制（表头/表体两种颜色都盖掉） */
+#write .md-table-fig table tr :is(th, td) .md-focus::after {
+  display: none !important;
+}
+
+/* 4.3 关掉「固定表头」——4.1 的连带修正。
+   auto-scroll.css 里写着 `figure>table thead { position: sticky; top: 0; z-index: 10 }`，
+   那是给「表格自己滚动、表头钉在表格顶部」这个设计用的。4.1 把表格的滚动容器关掉之后，
+   sticky 的参照物就从 figure 变成了窗口：滚动页面时长表格的表头会浮在页面顶部，
+   盖住上面那一行（截图里就是「项目/改法/文件」压在别的行上）。
+   表格已经不内部滚动了，固定表头没有意义，改回普通表头。 */
+#write :is(figure.md-table-fig, figure.table-figure, .md-table-fig, figure:has(> table)) > table thead {
+  position: static !important;
 }
 
 

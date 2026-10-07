@@ -1,5 +1,3 @@
-<div align="center">
-
 # dexter-seeyue
 
 **给长文写作的一套排版秩序**
@@ -8,7 +6,6 @@
 
 ![dexter-seeyue 暗色](./assets/image-20261007141901046.png)
 
-</div>
 
 ## 改了什么
 
@@ -18,14 +15,12 @@
 | :-: | --- | --- |
 | macOS 上侧边栏白底、白字看不见 | 补上 Typora 核心读取的 `--bg-color` / `--side-bar-bg-color` / `--text-color` | `configs/dark-config.css` |
 | 标题等级提示、引用块竖线、代码块语言标签跑到正文左上角 | `#write` 的 `position` 由 `static` 改回 `relative` | `write-area.css` |
-| 正文标题左侧的 H1~H6 小标签压住侧边栏图标 | 关掉 | `configs/dark-config.css` |
-| 长表格、长代码块内部滚动 | 关掉；表格的横向滚动条也去掉，过宽时改为缩进正文列宽 | `configs/dark-config.css`、`custom/custom-dark.css` |
+| 长表格、长代码块内部滚动 | 关掉；表格的横向滚动条也去掉，过宽时改为缩进正文列宽；固定表头一并关掉 | `configs/dark-config.css`、`custom/custom-dark.css` |
+| 表格里按住一拖会整行/整列跟着跑；光标进单元格出现绿条后，拖选文字还会让内容错位、松手弹回 | 关掉行/列把手；关掉单元格绿条和它牵连的 `inline-block` + `0.5s` 过渡 | `custom/custom-dark.css` |
 | 图片最大宽度 85%、悬停会放大 | 改成 100%、不放大 | `configs/dark-config.css` |
 | 高亮是「马克笔涂抹」 | 改成圆角色块，`#1f7a2e` 底 + 白字 | `custom/custom-dark.css` |
 | H2 有蓝色底条 + 下方蓝线，和 H3/H4 不是一套 | 去掉，并入 H3/H4 色系；标题里的链接改成字色继承 + 下划线 | `custom/custom-dark.css` |
 | 大纲小三角悬停变橙 `#e87040` | 改成三角保持本色 + 选中蓝半透明底衬 | `custom/custom-dark.css` |
-
-其余文件与上游一字不差，方便日后照上游升级。
 
 ## 装进 Typora
 
