@@ -1,0 +1,162 @@
+/* 本文件为用户自定义 See Yue Salt 主题代码的存放处 */
+/* 主题官方约定：用户自己的代码统一写在这里，升级主题时不会被覆盖 */
+/* ================================================================= */
+/* 本文件的高亮样式与 custom-dark.css 保持一致，三个主题观感统一。
+   启用方式：以 see-yue-salt-diy.css 为入口（其末尾已 @import 本文件）。 */
+
+
+/* ━━━━━━━━━━━ 01 高亮（mark） —— 圆角色块效果 ━━━━━━━━━━━ */
+/* 主题自带的高亮是「马克笔涂抹」效果：inline-element.css 用
+   `background-color: transparent !important` + box-shadow 内阴影实现半高背景。
+   这里要改成「圆角色块」，因此必须把颜色、阴影、内边距三项全部覆盖掉，
+   只改颜色会留下一层内阴影，效果不干净。
+   对比度：#1f7a2e + 白字 = 5.41:1，满足 WCAG AA 正文 ≥4.5:1。 */
+:root {
+  /* 高亮文本背景色 */
+  --marked-text-bg-color: #1f7a2e;
+  /* 高亮文本颜色（Themes 面板内置样式会给 mark 设默认文字色，必须 !important 才能覆盖） */
+  --marked-text-color   : #ffffff;
+}
+
+/* 正文高亮 */
+#write mark {
+  background-color    : var(--marked-text-bg-color) !important;
+  color               : var(--marked-text-color) !important;
+  box-shadow          : none !important;
+  padding             : 0 4px !important;
+  margin              : 0 !important;
+  border-radius       : 5px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* 侧边栏高亮（搜索关键词等） */
+#typora-sidebar mark {
+  background-color    : var(--marked-text-bg-color) !important;
+  color               : var(--marked-text-color) !important;
+  padding             : 0 4px !important;
+  border-radius       : 5px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* 注：若以后改用 See Yue Pure / See Yue Salt，请把上面这一整段复制到
+   custom-pure.css / custom-salt.css，并在 see-yue-pure.css / see-yue-salt.css
+   末尾取消对应 @import 的注释，否则那两个主题仍是原本的马克笔高亮。 */
+
+
+/* ━━━━━━━━━━━ 02 侧边栏大纲「小三角」悬浮色去橙 ━━━━━━━━━━━ */
+/* 问题：上游对本主题的 --hover-outline-left-triangle-color 写的是 inherit，
+   悬浮反馈只能靠底衬，三个主题观感不统一（Salt 那份还是珊瑚橙）。
+   改法：三个主题统一为「三角保持本色 + 选中蓝低透明度底衬」。 */
+:root {
+  /* 鼠标悬浮时的三角颜色：继承普通状态的三角颜色 */
+  --hover-outline-left-triangle-color   : inherit;
+  /* 鼠标悬浮时的底衬：主题选中蓝 #5e81ac 的低透明度版本 */
+  --hover-outline-left-triangle-bg-color: rgba(94, 129, 172, .35);
+}
+
+/* ━━━━━━━━━━━ 03 标题统一：H2 并入 H3/H4/H5 的色系 ━━━━━━━━━━━ */
+/* 原主题里 H2 是异类：`#write h2 span` 铺一条蓝渐变底 + `h2::after` 一条下方蓝线，
+   文字还是为配蓝底而设的白字；而 H3/H4/H5/H6 是同色系、无底色
+   （dark：#a3be8c → 70% → 50%；pure：#3b4252 → 70% → 50%；salt：#81b29a → 70% → 50%）。
+   这里把 H2 并进这条色系：
+     · 去掉 H2 的文字底色（蓝条）与下方分隔线 → 消除「两层蓝」；
+     · H2 文字改用与 H3/H4 相同的 --h3-h4-color，只在字号上保持层级（1.7rem > 1.5rem）。
+   标题内部的行内元素同时处理：
+     · 高亮 mark —— 保留绿色块，并补齐到标题行高，避免上下露出底色；
+     · 链接 a    —— 不加背景，只加下划线以示可点击（像 GitHub 标题里的链接），
+                    字色继承标题，避免在标题色上再加一层颜色；
+     · 标题里的链接不再显示网站图标与尾部小图标。 */
+
+/* 1) 去掉 H2 的蓝条与下方分隔线，文字并入 H3/H4 色系 */
+#write h2 span {
+  background-image: none !important;
+  /* headline.css 给 h2 span 单独加了 `padding: 0 5px` 与 `margin-left: .5px`，
+     其他标题级别都没有 —— 那是给蓝底留的内边距。蓝底去掉后它就成了纯偏移，
+     会让 H2 比 H3/H4/H5 右移 5.5px，这里一并清零以对齐。 */
+  padding    : 0 !important;
+  margin-left: 0 !important;
+}
+#write h2::after {
+  display: none !important;
+}
+/* 必须直接命中 span：headline.css 有 `#write h2 span { color: var(--h2-color) }`
+   直接给 span 上色，光给 h2 设色会被它挡掉（继承不生效） */
+#write h2 span,
+#write h2 a {
+  color: var(--h3-h4-color) !important;
+}
+
+/* 2) 标题内高亮：保留绿色，并补齐到标题行高，避免露出底色 */
+#write :is(h1, h2, h3, h4, h5, h6) mark {
+  display      : inline-block;
+  padding      : 0.02em 5px !important;
+  border-radius: 4px;
+}
+
+/* 3) 标题内链接：不加背景，只加下划线；字色继承标题 */
+#write :is(h1, h2, h3, h4, h5, h6) :is(a, a:visited, a:active, a:hover) {
+  background          : transparent !important;
+  background-image    : none !important;
+  box-shadow          : none !important;
+  outline             : none !important;
+  border              : none !important;
+  padding             : 0 !important;
+  margin              : 0 !important;
+  border-radius       : 0 !important;
+  -webkit-tap-highlight-color: transparent !important;
+  color               : inherit;
+  text-decoration-line: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+  font-size   : inherit !important;
+  font-weight : inherit !important;
+}
+
+/* 4) 标题里的链接不显示网站图标与尾部小图标 */
+#write :is(h1, h2, h3, h4, h5, h6) a[href*="http"]::before,
+#write :is(h1, h2, h3, h4, h5, h6) a[href*="http"]::after {
+  display: none !important;
+}
+
+
+/* ━━━━━━━━━━━ 05 侧边栏打开时隐藏「标题等级提示」 ━━━━━━━━━━━ */
+/* 现象：左上角侧边栏按钮区出现 H1~H6 小标签、与图标重合。
+   原因（两层）：
+     1. 这些标签由 headline.css 的 `#write>:is(h2..h6)::before` 生成，
+        位置是 `right: calc(100% + 10px)` —— 即贴在 #write 的左外侧；
+     2. 侧边栏 `#typora-sidebar` 固定打开时正好占着正文左边那条空间，而
+        `content` 在 DOM 里排在侧边栏之后、两者都是 absolute，
+        所以正文左外侧的内容会画在侧边栏上面 → 重叠。
+   修法：侧边栏固定打开（.pin-outline）时隐藏等级提示，收起侧边栏时恢复。
+   说明：另有 `#write{position:relative}` 的修复（write-area.css），
+        那个解决的是「标签失去定位基准、跑到 content 左上角」，与此处互补。 */
+.typora-node.pin-outline #write > :is(h2, h3, h4, h5, h6)::before {
+  display: none !important;
+}
+
+
+/* ━━━━━━━━━━━ 05 侧边栏「标题等级提示」位置 ━━━━━━━━━━━ */
+/* 白线：核心 `.sidebar-tabs { border-bottom: var(--window-border) }` 所画，
+   加 4px 下内边距 → 白线紧贴在 H1~H6 文字下方、不再压进目录区。 */
+.sidebar-tabs {
+  padding-bottom: 4px !important;
+}
+
+/* H1~H6 图例（主题 sidebar/outline-indent.css 用 position:fixed 硬钉在左上角）。
+   这里只覆盖定位：落在白线之上、左上角图标之下。 */
+:root {
+  --rating-row-top : 44px;
+  --rating-row-left: 19px;
+}
+
+#outline-content:has(.outline-h1) .outline-h1:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1)) .outline-h2:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1, .outline-h2)) .outline-h3:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1, .outline-h2, .outline-h3)) .outline-h4:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1, .outline-h2, .outline-h3, .outline-h4)) .outline-h5:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1, .outline-h2, .outline-h3, .outline-h4, .outline-h5)) .outline-h6:first-of-type > .outline-item::before {
+  top : var(--rating-row-top) !important;
+  left: var(--rating-row-left) !important;
+}

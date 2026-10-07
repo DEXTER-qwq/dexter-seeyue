@@ -1,0 +1,211 @@
+/* 本文件为用户自定义 See Yue Dark 主题代码的存放处 */
+/* 主题官方约定：用户自己的代码统一写在这里，升级主题时不会被覆盖 */
+/* ================================================================= */
+
+
+/* ━━━━━━━━━━━ 01 高亮（mark） —— 圆角色块效果 ━━━━━━━━━━━ */
+/* 主题自带的高亮是「马克笔涂抹」效果：inline-element.css 用
+   `background-color: transparent !important` + box-shadow 内阴影实现半高背景。
+   这里要改成「圆角色块」，因此必须把颜色、阴影、内边距三项全部覆盖掉，
+   只改颜色会留下一层内阴影，效果不干净。
+   对比度：#1f7a2e + 白字 = 5.41:1，满足 WCAG AA 正文 ≥4.5:1。 */
+:root {
+  /* 高亮文本背景色 */
+  --marked-text-bg-color: #1f7a2e;
+  /* 高亮文本颜色（Themes 面板内置样式会给 mark 设默认文字色，必须 !important 才能覆盖） */
+  --marked-text-color   : #ffffff;
+}
+
+/* 正文高亮 */
+#write mark {
+  background-color    : var(--marked-text-bg-color) !important;
+  color               : var(--marked-text-color) !important;
+  box-shadow          : none !important;
+  padding             : 0 4px !important;
+  margin              : 0 !important;
+  border-radius       : 5px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* 侧边栏高亮（搜索关键词等） */
+#typora-sidebar mark {
+  background-color    : var(--marked-text-bg-color) !important;
+  color               : var(--marked-text-color) !important;
+  padding             : 0 4px !important;
+  border-radius       : 5px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* 已同步：custom-pure.css、custom-salt.css 中写入了完全相同的高亮样式，三个主题
+   观感一致。三者互不共用，改颜色时请三份一起改。
+   对应入口：see-yue-dark-diy.css / see-yue-pure-diy.css / see-yue-salt-diy.css
+   （均指向 ./MySeeYue/ 文件夹，需与本文件一起放进 Typora 的 themes 目录）。 */
+
+
+/* ━━━━━━━━━━━ 02 侧边栏大纲「小三角」悬浮色去橙 ━━━━━━━━━━━ */
+/* 问题：鼠标移到大纲条目上时，展开/折叠箭头会变成橙色 #e87040，底衬
+   rgba(216,74,27,.3) 也是红橙调，与侧边栏的白/灰文字 + #5e81ac 选中蓝不搭。
+   原因：上游 configs 把 --hover-outline-left-triangle-color 对暗色主题写成了橙色
+   （Pure 写的是 inherit，可见暗色/Salt 这两份是上游遗漏）。
+   改法：改成与普通三角同色、底衬用主题的选中蓝低透明度，风格统一。 */
+:root {
+  /* 鼠标悬浮时的三角颜色：与普通状态的 --sidebar-outline-left-triangle-color 一致 */
+  --hover-outline-left-triangle-color   : rgba(255, 255, 255, .8);
+  /* 鼠标悬浮时的底衬：主题选中蓝 #5e81ac 的低透明度版本 */
+  --hover-outline-left-triangle-bg-color: rgba(94, 129, 172, .35);
+}
+
+
+/* ━━━━━━━━━━━ 03 标题统一：H2 并入 H3/H4/H5 的色系 ━━━━━━━━━━━ */
+/* 原主题里 H2 是异类：`#write h2 span` 铺一条蓝渐变底 + `h2::after` 一条下方蓝线，
+   文字还是为配蓝底而设的白字；而 H3/H4/H5/H6 是同色系、无底色
+   （dark：#a3be8c → 70% → 50%；pure：#3b4252 → 70% → 50%；salt：#81b29a → 70% → 50%）。
+   这里把 H2 并进这条色系：
+     · 去掉 H2 的文字底色（蓝条）与下方分隔线 → 消除「两层蓝」；
+     · H2 文字改用与 H3/H4 相同的 --h3-h4-color，只在字号上保持层级（1.7rem > 1.5rem）。
+   标题内部的行内元素同时处理：
+     · 高亮 mark —— 保留绿色块，并补齐到标题行高，避免上下露出底色；
+     · 链接 a    —— 不加背景，只加下划线以示可点击（像 GitHub 标题里的链接），
+                    字色继承标题，避免在标题色上再加一层颜色；
+     · 标题里的链接不再显示网站图标与尾部小图标。 */
+
+/* 1) 去掉 H2 的蓝条与下方分隔线，文字并入 H3/H4 色系 */
+#write h2 span {
+  background-image: none !important;
+  /* headline.css 给 h2 span 单独加了 `padding: 0 5px` 与 `margin-left: .5px`，
+     其他标题级别都没有 —— 那是给蓝底留的内边距。蓝底去掉后它就成了纯偏移，
+     会让 H2 比 H3/H4/H5 右移 5.5px，这里一并清零以对齐。 */
+  padding    : 0 !important;
+  margin-left: 0 !important;
+}
+#write h2::after {
+  display: none !important;
+}
+/* 必须直接命中 span：headline.css 有 `#write h2 span { color: var(--h2-color) }`
+   直接给 span 上色，光给 h2 设色会被它挡掉（继承不生效） */
+#write h2 span,
+#write h2 a {
+  color: var(--h3-h4-color) !important;
+}
+
+/* 2) 标题内高亮：保留绿色，并补齐到标题行高，避免露出底色 */
+#write :is(h1, h2, h3, h4, h5, h6) mark {
+  display      : inline-block;
+  padding      : 0.02em 5px !important;
+  border-radius: 4px;
+}
+
+/* 3) 标题内链接：不加背景，只加下划线；字色继承标题 */
+#write :is(h1, h2, h3, h4, h5, h6) :is(a, a:visited, a:active, a:hover) {
+  background          : transparent !important;
+  background-image    : none !important;
+  box-shadow          : none !important;
+  outline             : none !important;
+  border              : none !important;
+  padding             : 0 !important;
+  margin              : 0 !important;
+  border-radius       : 0 !important;
+  -webkit-tap-highlight-color: transparent !important;
+  color               : inherit;
+  text-decoration-line: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+  font-size   : inherit !important;
+  font-weight : inherit !important;
+}
+
+/* 4) 标题里的链接不显示网站图标与尾部小图标 */
+#write :is(h1, h2, h3, h4, h5, h6) a[href*="http"]::before,
+#write :is(h1, h2, h3, h4, h5, h6) a[href*="http"]::after {
+  display: none !important;
+}
+
+/* ━━━━━━━━━━━ 04 长代码块、长表格不滚动（已启用） ━━━━━━━━━━━ */
+/* 主题默认：代码块超过 50vh、表格超过 50vh 就内部滚动。你已关闭该功能，
+   对应配置在 CSS/configs/dark-config.css：
+     --code-block-max-height : initial;   （50vh —— 开启）
+     --table-max-height      : initial;   （50vh —— 开启）
+   顺带说明：长代码块关闭纵向滚动后，行太长时整块会横向滚动，且主题自带的
+   「单行横向滚动」规则（code-block.css 内）会失效，这是该功能的正常取舍。 */
+
+
+/* ━━━━━━━━━━━ 05 备选方案（需要时取消注释） ━━━━━━━━━━━ */
+
+/* 5.1 不想要代码块「光标所在行」底色：dark-config.css 里注释掉
+   --focus-code-line-bg-color 即可；也可在此处统一覆盖，便于两处对照。 */
+/*
+.md-fences.md-focus .CodeMirror-code>div.CodeMirror-activeline {
+  background: transparent !important;
+}
+*/
+
+/* 5.2 不想要代码块「单行横向滚动」（长行改为整块横向滚动）： */
+/*
+@media screen {
+  #write pre.md-fences .CodeMirror-wrap .CodeMirror-code pre {
+    overflow-x : visible !important;
+    white-space: pre !important;
+  }
+}
+*/
+
+/* 5.3 不想要图片悬浮放大：dark-config.css 的
+   --hover-image-bigger-multiple 改为 1 即可（已生效）。 */
+
+
+/* ━━━━━━━━━━━ 06 Mermaid 图（原代码作废） ━━━━━━━━━━━ */
+/* Typora 的 Mermaid 不读取 CSS 变量，--mermaid-theme 等写在 CSS 里没有任何效果，
+   必须在 Typora 的「偏好设置 → Markdown → 图表 / Diagrams」中配置。
+   原代码保留在下方注释里仅作备忘，可直接删除。 */
+/*
+:root {
+  --mermaid-theme: night;
+  --mermaid-font-family: "Fira", "霞鹜文楷";
+  --mermaid-sequence-numbers: on;
+  --mermaid-flowchart-curve: linear;
+  --mermaid--gantt-left-padding: 75;
+}
+*/
+
+
+/* ━━━━━━━━━━━ 05 侧边栏打开时隐藏「标题等级提示」 ━━━━━━━━━━━ */
+/* 现象：左上角侧边栏按钮区出现 H1~H6 小标签、与图标重合。
+   原因（两层）：
+     1. 这些标签由 headline.css 的 `#write>:is(h2..h6)::before` 生成，
+        位置是 `right: calc(100% + 10px)` —— 即贴在 #write 的左外侧；
+     2. 侧边栏 `#typora-sidebar` 固定打开时正好占着正文左边那条空间，而
+        `content` 在 DOM 里排在侧边栏之后、两者都是 absolute，
+        所以正文左外侧的内容会画在侧边栏上面 → 重叠。
+   修法：侧边栏固定打开（.pin-outline）时隐藏等级提示，收起侧边栏时恢复。
+   说明：另有 `#write{position:relative}` 的修复（write-area.css），
+        那个解决的是「标签失去定位基准、跑到 content 左上角」，与此处互补。 */
+.typora-node.pin-outline #write > :is(h2, h3, h4, h5, h6)::before {
+  display: none !important;
+}
+
+
+/* ━━━━━━━━━━━ 05 侧边栏「标题等级提示」位置 ━━━━━━━━━━━ */
+/* 白线：核心 `.sidebar-tabs { border-bottom: var(--window-border) }` 所画，
+   加 4px 下内边距 → 白线紧贴在 H1~H6 文字下方、不再压进目录区。 */
+.sidebar-tabs {
+  padding-bottom: 4px !important;
+}
+
+/* H1~H6 图例（主题 sidebar/outline-indent.css 用 position:fixed 硬钉在左上角）。
+   这里只覆盖定位：落在白线之上、左上角图标之下。 */
+:root {
+  --rating-row-top : 44px;
+  --rating-row-left: 19px;
+}
+
+#outline-content:has(.outline-h1) .outline-h1:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1)) .outline-h2:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1, .outline-h2)) .outline-h3:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1, .outline-h2, .outline-h3)) .outline-h4:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1, .outline-h2, .outline-h3, .outline-h4)) .outline-h5:first-of-type > .outline-item::before,
+#outline-content:not(:has(.outline-h1, .outline-h2, .outline-h3, .outline-h4, .outline-h5)) .outline-h6:first-of-type > .outline-item::before {
+  top : var(--rating-row-top) !important;
+  left: var(--rating-row-left) !important;
+}
