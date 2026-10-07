@@ -130,6 +130,27 @@
    顺带说明：长代码块关闭纵向滚动后，行太长时整块会横向滚动，且主题自带的
    「单行横向滚动」规则（code-block.css 内）会失效，这是该功能的正常取舍。 */
 
+/* 4.1 表格的横向滚动条也去掉（上面两个变量只管纵向）。
+   auto-scroll.css 给 figure 设了 `overflow: overlay`，只要表格比正文列宽就出横向滚动条：
+     · 列多 —— 每列还有 `--table-cell-min-width: 120px` 的硬下限，列数 × 120px 很容易超宽；
+     · 单元格里有长串 —— 像 `--side-bar-bg-color` 这种不换行的 token 会顶开列宽。
+   两条一起松开，表格就会自己缩进正文列宽以内，而不是滚起来。 */
+#write figure.md-table-fig,
+#write figure:has(> table) {
+  /* 纵向已经由 --table-max-height: initial 关掉，这里一并写明，防止上游改动回退 */
+  max-height: none !important;
+  /* 关掉滚动容器：表格装不下时直接缩，不再出滚动条 */
+  overflow  : visible !important;
+}
+
+#write figure.md-table-fig > table tr :is(th, td),
+#write figure:has(> table) > table tr :is(th, td) {
+  /* 去掉 auto-scroll.css 的 min-width: var(--table-cell-min-width) 硬下限 */
+  min-width    : 0 !important;
+  /* 长串允许在任意位置断开，否则列压不窄 */
+  overflow-wrap: anywhere;
+}
+
 
 /* ━━━━━━━━━━━ 05 备选方案（需要时取消注释） ━━━━━━━━━━━ */
 
