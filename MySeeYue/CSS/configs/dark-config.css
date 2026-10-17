@@ -156,7 +156,8 @@
   /* 标题等级提示（正文标题左侧那排 H1~H6 小标签）。
      它挂在 #write 左外侧，侧边栏打开时会压到侧边栏图标上，故关闭。
      想开回来改回 inline-block 即可。 */
-  --headline-rating-prompt-state     : none;
+  /* 是否开启标题等级提示，inline-block —— 开启，none —— 关闭 */
+  --headline-rating-prompt-state     : inline-block;
   /* 标题等级提示颜色 */
   --headline-rating-prompt-word-color: #999 !important;
   /* 标题等级提示文字大小 */
